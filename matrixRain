@@ -1,0 +1,248 @@
+#!/usr/bin/env node
+var c, colorDropPropability, createDroplet, direction, dropletCount, droplets, fileContents, filePath, filePos, flush, fs, getChars, getFileChars, maxLength, maxSpeed, minLength, numCols, numDroplets, numRows, outBuffer, parseCliParams, rand, readFileContents, refreshDropletParams, shuffledCols, stdout, tty, updateCount, updateDroplets, updateMs, write;
+
+fs = require('fs');
+
+c = console;
+
+stdout = process.stdout;
+
+numRows = stdout.rows;
+
+numCols = stdout.columns;
+
+minLength = 1;
+
+maxLength = 10;
+
+numDroplets = 10;
+
+dropletCount = 0;
+
+shuffledCols = [];
+
+droplets = [];
+
+direction = "v";
+
+updateMs = 30;
+
+updateCount = 0;
+
+maxSpeed = 20;
+
+colorDropPropability = 0.001;
+
+filePath = null;
+
+filePos = 0;
+
+fileContents = null;
+
+tty = {
+  clearScreen: "\x1b[2J",
+  moveCursorToHome: "\x1b[H",
+  moveCursorTo: function(row, col) {
+    return "\x1b[" + row + ";" + col + "H";
+  },
+  cursorVisible: '\x1b[?25h',
+  cursorInvisible: '\x1b[?25l',
+  fgColor: function(c) {
+    return "\x1b[38;5;" + c + "m";
+  },
+  bgColor: function(c) {
+    return "\x1b[48;5;" + c + "m";
+  },
+  underline: "\x1b[4m",
+  bold: "\x1b[1m",
+  off: "\x1b[0m",
+  reset: "\x1bc"
+};
+
+outBuffer = "";
+
+write = function(chars) {
+  return outBuffer += chars;
+};
+
+flush = function() {
+  stdout.write(outBuffer);
+  return outBuffer = "";
+};
+
+stdout.on('resize', function() {
+  return refreshDropletParams();
+});
+
+process.on('SIGINT', function() {
+  write(tty.reset);
+  write(tty.cursorVisible);
+  flush();
+  return process.exit();
+});
+
+refreshDropletParams = function() {
+  var i, j, k, moveCursorTo, ref, ref1, ref2, results, results1, rnd;
+  numCols = stdout.columns;
+  numRows = stdout.rows;
+  if (direction === "h") {
+    ref = [numRows, numCols], numCols = ref[0], numRows = ref[1];
+    if (!tty.moveCursorTo.proxied) {
+      moveCursorTo = tty.moveCursorTo;
+      tty.moveCursorTo = function(row, col) {
+        return moveCursorTo(col, row);
+      };
+      tty.moveCursorTo.proxied = true;
+    }
+  }
+  minLength = numRows;
+  maxLength = numRows * 5;
+  numDroplets = numCols * 2;
+  shuffledCols = (function() {
+    results = [];
+    for (var j = 0; 0 <= numCols ? j < numCols : j > numCols; 0 <= numCols ? j++ : j--){ results.push(j); }
+    return results;
+  }).apply(this);
+  results1 = [];
+  for (i = k = 0, ref1 = numCols; 0 <= ref1 ? k < ref1 : k > ref1; i = 0 <= ref1 ? ++k : --k) {
+    rnd = rand(0, numCols);
+    results1.push((ref2 = [shuffledCols[rnd], shuffledCols[i]], shuffledCols[i] = ref2[0], shuffledCols[rnd] = ref2[1], ref2));
+  }
+  return results1;
+};
+
+createDroplet = function() {
+  var droplet;
+  droplet = {
+    col: shuffledCols[dropletCount++ % numCols],
+    row: 0,
+    length: rand(minLength, maxLength),
+    speed: rand(1, maxSpeed)
+  };
+  droplet.chars = getChars(droplet.length);
+  droplets.push(droplet);
+};
+
+updateDroplets = function() {
+  var drop, j, len1, remainingDroplets;
+  updateCount++;
+  remainingDroplets = [];
+  for (j = 0, len1 = droplets.length; j < len1; j++) {
+    drop = droplets[j];
+    if ((drop.row - drop.length) >= numRows || drop.col >= numCols) {
+      continue;
+    } else {
+      remainingDroplets.push(drop);
+    }
+    if ((updateCount % drop.speed) === 0) {
+      if (drop.row > 0 && drop.row <= (numRows + 1)) {
+        write(tty.moveCursorTo(drop.row - 1, drop.col));
+        if (Math.random() < colorDropPropability) {
+          write(tty.fgColor(rand(1, 255)));
+          write(drop.headChar);
+          write(tty.off);
+        } else {
+          write(drop.headChar);
+        }
+      }
+      if (drop.row <= numRows) {
+        write(tty.moveCursorTo(drop.row, drop.col));
+        write(tty.fgColor(7));
+        write(tty.underline);
+        drop.headChar = drop.chars.charAt(drop.row);
+        write(drop.headChar);
+        write(tty.off);
+      }
+      if ((drop.row - drop.length) >= 0) {
+        write(tty.moveCursorTo(drop.row - drop.length, drop.col));
+        write(" ");
+      }
+      drop.row++;
+    }
+  }
+  droplets = remainingDroplets;
+  if (droplets.length < numDroplets) {
+    createDroplet();
+  }
+  return flush();
+};
+
+rand = function(start, end) {
+  return start + Math.floor(Math.random() * (end - start));
+};
+
+getChars = function(len) {
+  var chars, i, j, ref;
+  chars = "";
+  for (i = j = 0, ref = len; j < ref; i = j += 1) {
+    chars += String.fromCharCode(rand(0x21, 0x7E));
+  }
+  return chars;
+};
+
+getFileChars = function(len) {
+  var chars;
+  chars = fileContents.substr(filePos, len);
+  if (chars.length !== len) {
+    filePos = len - chars.length;
+    chars += fileContents.substr(0, filePos);
+  } else {
+    filePos += len;
+  }
+  return chars;
+};
+
+readFileContents = function() {
+  if (filePath) {
+    fileContents = fs.readFileSync(filePath, "utf-8");
+    fileContents = fileContents.replace(/^\s+|\r|\n/gm, " ");
+    return getChars = getFileChars;
+  }
+};
+
+parseCliParams = function() {
+  var arg, args, j, len1, match;
+  args = process.argv.splice(2);
+  for (j = 0, len1 = args.length; j < len1; j++) {
+    arg = args[j];
+    if (arg === "--help") {
+      c.log("Usage: matrix-rain opts? filePath?");
+      c.log("opts: --direction=v|h = change direction. If reading from file direction is h (horizontal)");
+      c.log("filePath: Read characters from file and set direction=h");
+      c.log("By default generate random ascii chars in v (vertical) direction");
+      process.exit(0);
+    }
+    if (arg.indexOf("--direction") === 0) {
+      match = arg.match(/^\-\-direction=(v|h)/);
+      if (match) {
+        direction = match[1];
+      } else {
+        c.error("unrecognized direction arg", arg);
+        process.exit(1);
+      }
+    } else {
+      filePath = arg;
+      if (!fs.existsSync(filePath)) {
+        c.error("Can't find", filePath);
+        process.exit(1);
+      }
+      if (args.length === 1) {
+        direction = "h";
+      }
+    }
+  }
+};
+
+parseCliParams();
+
+write(tty.clearScreen);
+
+write(tty.cursorInvisible);
+
+flush();
+
+readFileContents();
+
+refreshDropletParams();
+
+setInterval(updateDroplets, 10);

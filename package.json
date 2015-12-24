@@ -1,0 +1,27 @@
+{
+  "name": "matrix-rain",
+  "version": "1.0.0",
+  "description": "Matrix Rain effect in cli. Characters from a file can also be used.",
+  "main": "matrixRain",
+	"bin": {
+    "matrix-rain": "matrixRain"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/nojvek/matrix-rain"
+  },
+  "keywords": [
+    "matrix",
+    "rain",
+    "cli",
+    "code",
+    "effect",
+    "node"
+  ],
+  "author": "nojvek",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nojvek/matrix-rain/issues"
+  },
+  "homepage": "https://github.com/nojvek/matrix-rain"
+}

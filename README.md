@@ -21,11 +21,11 @@ On christmas eve I watched the The Matrix (1999) and was inspired by the matrix 
 
 There's [blessed](https://github.com/chjj/blessed) and [node-ncurses](https://github.com/mscdex/node-ncurses) which would have helped but rather than using the library I wanted to learn how console cursor manipulation works behind the scenes. I browsed through the source code of [colors.js](https://github.com/marak/colors.js/) and got a few pointers. Thank you github.
 
-I've been programming for 6 years full time but on that day I discovered terminal escape codes. I googled around and found [VT100 ANSI codes table](# http://ascii-table.com/ansi-escape-sequences-vt-100.php)
+I've been programming for 6 years full time but on that day I discovered terminal escape codes. I googled around and found [VT100 ANSI codes table](http://ascii-table.com/ansi-escape-sequences-vt-100.php)
 
 I disovered process.stdout has a columns and rows property. It also fires a resize even when console is resized. With escape codes I can clear the screen, move the cursor to any position in the screen, change colors and do really cool things which previously I thought was vodoo magic. There's even support for 8 bit colors in console. Whoah! All I have to do is write the appropriate escape code sequence in stdout and that is it.
 
-!(http://suptg.thisisnotatrueending.com/archive/25731506/images/1372606872145.gif)
+![oh my god!](http://suptg.thisisnotatrueending.com/archive/25731506/images/1372606872145.gif)
 
 I learned a couple of things
 

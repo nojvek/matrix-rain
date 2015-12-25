@@ -1,6 +1,6 @@
-# Matrix Rain in terminal with node
+#Matrix Rain in terminal with node
 
-## Usage
+##Usage
 
 ```
 ./matrixRain.coffee --help

@@ -19,7 +19,7 @@ By default generate random ascii chars in v (vertical) direction
 
 ![Vertical Matrix](https://media.giphy.com/media/NA5S7F2dikADu/giphy.gif)
 
-![Horizontal Matrix](https://media.giphy.com/media/NA5S7F2dikADu/giphy.gif)
+![Horizontal Matrix](hhttps://media.giphy.com/media/uSV1MnXz3RM3u/giphy.gif)
 
 ## Story Time
 On christmas eve I watched the The Matrix (1999) and was inspired by the matrix effect. I was curious to see if I could replicate this effect without using other node modules.

@@ -43,5 +43,3 @@ Initial algorithm somewhat worked. I wondered what else I could do. I used a tri
 This had an interesting side effect that it was a great visualization of the source code. It looked like the computer was programming itself in parallel. I changed the code so it uses jquery.js and voila! I was reading snippets of jquery source code. While I took my dog for a run, I left it running. My wife (non-technical) sent me a message "Hey your computer is in the matrix, its really cool!". Younger noj would be very impressed of older noj.
 
 The source code matrixRain.coffee is < 200 lines of code. 
-
-Being in a large software company, I don't don't get to do fun things like this often. This was one of the things that really sparked up the inner geek in me. 

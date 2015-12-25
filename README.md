@@ -15,6 +15,11 @@ opts: --direction=v|h = change direction. If reading from file direction is h (h
 filePath: Read characters from file and set direction=h
 By default generate random ascii chars in v (vertical) direction
 ```
+## Screenshots
+
+![Vertical Matrix](https://media.giphy.com/media/NA5S7F2dikADu/giphy.gif)
+
+![Horizontal Matrix](https://media.giphy.com/media/NA5S7F2dikADu/giphy.gif)
 
 ## Story Time
 On christmas eve I watched the The Matrix (1999) and was inspired by the matrix effect. I was curious to see if I could replicate this effect without using other node modules.

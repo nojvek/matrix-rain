@@ -1,5 +1,5 @@
-#!/usr/bin/env node
-var c, colorDropPropability, createDroplet, direction, dropletCount, droplets, fileContents, filePath, filePos, flush, fs, getChars, getFileChars, maxLength, maxSpeed, minLength, numCols, numDroplets, numRows, outBuffer, parseCliParams, rand, readFileContents, refreshDropletParams, shuffledCols, stdout, tty, updateCount, updateDroplets, updateMs, write;
+#!/usr/local/bin/node
+var c, colorDropPropability, createDroplet, direction, dropletCount, droplets, fileContents, filePath, filePos, flush, fs, getChars, getFileChars, maxDroplets, maxSpeed, numCols, numRows, outBuffer, parseCliParams, rand, readFileContents, refreshDropletParams, shuffledCols, stdout, tty, updateCount, updateDroplets, updateMs, write;
 
 fs = require('fs');
 
@@ -11,11 +11,7 @@ numRows = stdout.rows;
 
 numCols = stdout.columns;
 
-minLength = 1;
-
-maxLength = 10;
-
-numDroplets = 10;
+maxDroplets = 0;
 
 dropletCount = 0;
 
@@ -82,7 +78,7 @@ process.on('SIGINT', function() {
 });
 
 refreshDropletParams = function() {
-  var i, j, k, moveCursorTo, ref, ref1, ref2, results, results1, rnd;
+  var i, j, k, maxLength, minLength, moveCursorTo, ref, ref1, ref2, results, results1, rnd;
   numCols = stdout.columns;
   numRows = stdout.rows;
   if (direction === "h") {
@@ -96,8 +92,8 @@ refreshDropletParams = function() {
     }
   }
   minLength = numRows;
-  maxLength = numRows * 5;
-  numDroplets = numCols * 2;
+  maxLength = numRows;
+  maxDroplets = numCols * 2;
   shuffledCols = (function() {
     results = [];
     for (var j = 0; 0 <= numCols ? j < numCols : j > numCols; 0 <= numCols ? j++ : j--){ results.push(j); }
@@ -116,7 +112,7 @@ createDroplet = function() {
   droplet = {
     col: shuffledCols[dropletCount++ % numCols],
     row: 0,
-    length: rand(minLength, maxLength),
+    length: numRows,
     speed: rand(1, maxSpeed)
   };
   droplet.chars = getChars(droplet.length);
@@ -148,7 +144,6 @@ updateDroplets = function() {
       if (drop.row <= numRows) {
         write(tty.moveCursorTo(drop.row, drop.col));
         write(tty.fgColor(7));
-        write(tty.underline);
         drop.headChar = drop.chars.charAt(drop.row);
         write(drop.headChar);
         write(tty.off);
@@ -161,7 +156,7 @@ updateDroplets = function() {
     }
   }
   droplets = remainingDroplets;
-  if (droplets.length < numDroplets) {
+  if (droplets.length < maxDroplets) {
     createDroplet();
   }
   return flush();

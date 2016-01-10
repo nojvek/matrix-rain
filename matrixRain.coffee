@@ -5,9 +5,7 @@ c = console
 stdout = process.stdout
 numRows = stdout.rows
 numCols = stdout.columns
-minLength = 1
-maxLength = 10
-numDroplets = 10
+maxDroplets = 0
 dropletCount = 0
 shuffledCols = []
 droplets = []
@@ -65,8 +63,8 @@ refreshDropletParams = ->
 			tty.moveCursorTo.proxied = true
 
 	minLength = numRows
-	maxLength = numRows * 5
-	numDroplets = numCols  * 2
+	maxLength = numRows
+	maxDroplets = numCols  * 2
 
 	#create shuffled cols array
 	shuffledCols = [0...numCols]
@@ -78,7 +76,7 @@ createDroplet  = () ->
 	droplet =
 		col: shuffledCols[dropletCount++ % numCols]
 		row: 0
-		length: rand(minLength, maxLength)
+		length: numRows
 		speed: rand(1, maxSpeed)
 	droplet.chars = getChars(droplet.length)
 	droplets.push droplet
@@ -111,7 +109,7 @@ updateDroplets = ->
 				# write new head
 				write tty.moveCursorTo(drop.row, drop.col)
 				write tty.fgColor(7) #white
-				write tty.underline
+				#write tty.underline
 				drop.headChar = drop.chars.charAt(drop.row)
 				write drop.headChar
 				write tty.off
@@ -124,7 +122,7 @@ updateDroplets = ->
 			drop.row++
 
 	droplets = remainingDroplets
-	if droplets.length < numDroplets
+	if droplets.length < maxDroplets
 		createDroplet()
 	flush()
 

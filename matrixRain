@@ -1,4 +1,4 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 var c, colorDropPropability, createDroplet, direction, dropletCount, droplets, fileContents, filePath, filePos, flush, fs, getChars, getFileChars, maxDroplets, maxSpeed, numCols, numRows, outBuffer, parseCliParams, rand, readFileContents, refreshDropletParams, shuffledCols, stdout, tty, updateCount, updateDroplets, updateMs, write;
 
 fs = require('fs');

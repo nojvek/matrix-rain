@@ -103,6 +103,7 @@ updateDroplets = ->
 					write tty.off
 				else
 					# change head back to default
+					write tty.fgColor(32)
 					write drop.headChar
 
 			if drop.row <= numRows

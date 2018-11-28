@@ -44,7 +44,7 @@ tty = {
   cursorVisible: '\x1b[?25h',
   cursorInvisible: '\x1b[?25l',
   fgColor: function(c) {
-    return "\x1b[38;5;" + c + "m";
+    return `\x1b[${c};1m`;
   },
   bgColor: function(c) {
     return "\x1b[48;5;" + c + "m";
@@ -52,7 +52,9 @@ tty = {
   underline: "\x1b[4m",
   bold: "\x1b[1m",
   off: "\x1b[0m",
-  reset: "\x1bc"
+  reset: "\x1bc",
+  colors: {
+  }
 };
 
 outBuffer = "";
@@ -133,20 +135,15 @@ updateDroplets = function() {
     if ((updateCount % drop.speed) === 0) {
       if (drop.row > 0 && drop.row <= (numRows + 1)) {
         write(tty.moveCursorTo(drop.row - 1, drop.col));
-        if (Math.random() < colorDropPropability) {
-          write(tty.fgColor(rand(1, 255)));
-          write(drop.headChar);
-          write(tty.off);
-        } else {
-          write(drop.headChar);
-        }
+        write(tty.fgColor(34));
+        write(drop.headChar);
       }
       if (drop.row <= numRows) {
         write(tty.moveCursorTo(drop.row, drop.col));
-        write(tty.fgColor(7));
+        write(tty.fgColor(37));
         drop.headChar = drop.chars.charAt(drop.row);
         write(drop.headChar);
-        write(tty.off);
+        // write(tty.off);
       }
       if ((drop.row - drop.length) >= 0) {
         write(tty.moveCursorTo(drop.row - drop.length, drop.col));
@@ -170,7 +167,9 @@ getChars = function(len) {
   var chars, i, j, ref;
   chars = "";
   for (i = j = 0, ref = len; j < ref; i = j += 1) {
-    chars += String.fromCharCode(rand(0x21, 0x7E));
+    // chars += String.fromCharCode(rand(0x21, 0x7E));
+    // chars += String.fromCharCode(rand(0x2840, 0x28ff)); // braille
+    chars += String.fromCharCode(rand(0x30a0, 0x30ff)); // kanji
   }
   return chars;
 };

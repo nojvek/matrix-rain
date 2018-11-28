@@ -1,7 +1,7 @@
 {
   "name": "matrix-rain",
   "version": "2.0.0",
-  "description": "Matrix Rain effect in a terminal",
+  "description": "The famous Matrix rain effect of falling green characters as a cli command",
   "main": "index.js",
   "preferGlobal": true,
   "bin": {
@@ -28,5 +28,8 @@
   "dependencies": {
     "argparse": "1.0.10",
     "chalk": "2.4.1"
+  },
+  "devDependencies": {
+    "eslint": "^5.9.0"
   }
 }

@@ -126,7 +126,7 @@ function makeDroplet(col) {
 
 function resizeDroplets() {
   // stdout returns values off by one
-  numCols = stdout.columns + 1;
+  numCols = stdout.columns;
   numRows = stdout.rows + 1 ;
 
   // Create droplets per column
@@ -144,7 +144,7 @@ function renderFrame() {
   for (const droplet of droplets) {
     const {curRow, col: curCol} = droplet;
     if (curRow < numRows) {
-      if (droplet.alive % droplet.speed === 0) {
+      if (droplet.alive % droplet.speed === 0 || true) {
         write(ansi.cursorPos(curRow, curCol));
         write(ansi.colors.fgWhite());
         write(droplet.chars[curRow]);
@@ -183,4 +183,5 @@ write(ansi.cursorInvisible());
 write(ansi.clearScreen());
 flush();
 resizeDroplets();
+
 setInterval(renderFrame, 16); // 60FPS

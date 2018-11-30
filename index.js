@@ -19,7 +19,7 @@ const argParser = new ArgumentParser({
   {
     flags: [ `-k`, `--char-range` ],
     opts: {
-      choices: [`ascii`, `kanji`, `binary`, `braille`],
+      choices: [`ascii`, `binary`, `braille`, `emoji`, `kanji`],
       defaultValue: `ascii`,
       dest: `charRange`,
       help: `Use rain characters from char-range`,
@@ -89,19 +89,24 @@ function rand(start, end) {
 
 function generateChars(len, charRange) {
   // by default charRange == ascii
-  let startChar = 0x21;
-  let endChar = 0x7E;
+  let startCharCode = 0x21;
+  let endCharCode = 0x7E;
+  let emojiChar = String.fromCharCode(0xd83d);
   if (charRange === `braille`) {
-    startChar = 0x2840;
-    endChar = 0x28ff;
+    startCharCode = 0x2840;
+    endCharCode = 0x28ff;
+  } else if (charRange === `emoji`) {
+    startCharCode = 0xde01;
+    endCharCode = 0xde4a;
   } else if (charRange === `kanji`) {
-    startChar = 0x30a0;
-    endChar = 0x30ff;
+    startCharCode = 0x30a0;
+    endCharCode = 0x30ff;
   }
 
   let chars = new Array(len);
+  let preChar = charRange === `emoji` ? emojiChar : ``;
   for (let i = 0; i < len; ++i) {
-    chars[i] = String.fromCharCode(rand(startChar, endChar));
+    chars[i] = preChar + String.fromCharCode(rand(startCharCode, endCharCode));
   }
 
   return chars;
@@ -117,8 +122,7 @@ function makeDroplet(col) {
     col,
     alive: 0,
     curRow: 0,
-    startRow: 0,
-    length: numRows,
+    height: rand(numRows / 2, numRows),
     speed: rand(1, maxSpeed),
     chars: generateChars(numRows, args.charRange),
   };
@@ -142,21 +146,32 @@ function resizeDroplets() {
 
 function renderFrame() {
   for (const droplet of droplets) {
-    const {curRow, col: curCol} = droplet;
+    const {curRow, col: curCol, height} = droplet;
     if (curRow < numRows) {
-      if (droplet.alive % droplet.speed === 0 || true) {
+      if (droplet.alive % droplet.speed === 0) {
         write(ansi.cursorPos(curRow, curCol));
         write(ansi.colors.fgWhite());
         write(droplet.chars[curRow]);
-        if (curRow > 1) {
+        if (curRow -1 >= 0) {
+          // turn previous line green
           write(ansi.cursorPos(curRow - 1, curCol));
           write(ansi.colors.fgGreen());
           write(droplet.chars[curRow - 1]);
+        }
+
+        if (curRow - height >= 0) {
+          write(ansi.cursorPos(curRow - height, curCol));
+          write(` `);
         }
         droplet.curRow++;
       }
       droplet.alive++;
     } else {
+      // make last line green
+      write(ansi.cursorPos(curRow - 1, curCol));
+      write(ansi.colors.fgGreen());
+      write(droplet.chars[curRow - 1]);
+
       // reset droplet
       Object.assign(droplet, makeDroplet(droplet.col));
     }

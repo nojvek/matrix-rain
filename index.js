@@ -17,6 +17,15 @@ const argParser = new ArgumentParser({
     },
   },
   {
+    flags: [ `-c`, `--color` ],
+    opts: {
+      choices: [`green`, `red`, `blue`, `yellow`, `magenta`, `cyan`, `white`],
+      defaultValue: `green`,
+      dest: `color`,
+      help: `Rain color. NOTE: droplet start is always white`,
+    },
+  },
+  {
     flags: [ `-k`, `--char-range` ],
     opts: {
       choices: [`ascii`, `binary`, `braille`, `emoji`, `kanji`],
@@ -73,14 +82,14 @@ const ansi = {
   },
 };
 
-let outBuffer = ``;
+let outBuffer = [];
 function write(chars) {
-  return outBuffer += chars;
+  return outBuffer.push(chars);
 }
 
 function flush() {
-  stdout.write(outBuffer);
-  return outBuffer = ``;
+  stdout.write(outBuffer.join(``));
+  return outBuffer = [];
 }
 
 function rand(start, end) {
@@ -133,47 +142,52 @@ function resizeDroplets() {
   numCols = stdout.columns;
   numRows = stdout.rows + 1 ;
 
+  // transpose for direction
+  if (args.direction === `h`) {
+    [numCols, numRows] = [numRows, numCols];
+  }
+
   // Create droplets per column
   // add/remove droplets to match column size
   if (numCols > droplets.length) {
     for (let col = droplets.length; col < numCols; ++col) {
-      droplets.push(makeDroplet(col));
+      // make two droplets per row
+      droplets.push([makeDroplet(col), makeDroplet(col)]);
     }
   } else {
     droplets.splice(numCols, droplets.length - numCols);
   }
 }
 
-function renderFrame() {
-  for (const droplet of droplets) {
-    const {curRow, col: curCol, height} = droplet;
-    if (curRow < numRows) {
-      if (droplet.alive % droplet.speed === 0) {
-        write(ansi.cursorPos(curRow, curCol));
-        write(ansi.colors.fgWhite());
-        write(droplet.chars[curRow]);
-        if (curRow -1 >= 0) {
-          // turn previous line green
-          write(ansi.cursorPos(curRow - 1, curCol));
-          write(ansi.colors.fgGreen());
-          write(droplet.chars[curRow - 1]);
-        }
+function writeAt(row, col, str, color) {
+  if (args.direction === `h`) {
+    [row, col] = [col, row];
+  }
+  // Only output if in frame
+  if (row >=0 && row < numRows && col >=0 && col < numCols) {
+    write(`${ansi.cursorPos(row, col)}${color || ``}${str || ``}`);
+  }
+}
 
-        if (curRow - height >= 0) {
-          write(ansi.cursorPos(curRow - height, curCol));
-          write(` `);
-        }
+function renderFrame() {
+  const color = args.color;
+  const ansiColor = ansi.colors[`fg${color.charAt(0).toUpperCase()}${color.substr(1)}`]();
+  for (const colDroplets of droplets) {
+    for (const droplet of colDroplets) {
+      const {curRow, col: curCol, height} = droplet;
+      droplet.alive++;
+
+      if (droplet.alive % droplet.speed === 0) {
+        writeAt(curRow, curCol, droplet.chars[curRow], ansi.colors.fgWhite());
+        writeAt(curRow - 1, curCol, droplet.chars[curRow - 1], ansiColor);
+        writeAt(curRow - height, curCol, ` `);
         droplet.curRow++;
       }
-      droplet.alive++;
-    } else {
-      // make last line green
-      write(ansi.cursorPos(curRow - 1, curCol));
-      write(ansi.colors.fgGreen());
-      write(droplet.chars[curRow - 1]);
 
-      // reset droplet
-      Object.assign(droplet, makeDroplet(droplet.col));
+      if (curRow - height > numRows) {
+        // reset droplet
+        Object.assign(droplet, makeDroplet(droplet.col));
+      }
     }
   }
   flush();
@@ -196,6 +210,7 @@ process.on(`SIGINT`, function() {
 write(ansi.useAltBuffer());
 write(ansi.cursorInvisible());
 write(ansi.clearScreen());
+write(ansi.colors.bgBlack());
 flush();
 resizeDroplets();
 

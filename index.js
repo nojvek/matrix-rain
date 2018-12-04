@@ -199,6 +199,7 @@ function start() {
 
 function stop() {
   write(ansi.cursorVisible());
+  write(ansi.clearScreen());
   write(ansi.cursorHome());
   write(ansi.useNormalBuffer());
   flush();

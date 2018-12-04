@@ -64,35 +64,52 @@ function rand(start, end) {
 
 class MatrixRain {
   constructor(opts) {
-    this.opts = opts;
+    this.transpose = opts.direction === `h`;
+    this.color = opts.color;
+    this.charRange = opts.charRange;
     this.maxSpeed = 20;
     this.colDroplets = [];
     this.numCols = 0;
     this.numRows = 0;
+
+    // handle reading from file
+    if (opts.filePath) {
+      if (!fs.existsSync(opts.filePath)) {
+        throw new Error(`${opts.filePath} doesn't exist`);
+      }
+      this.fileChars = fs.readFileSync(opts.filePath, `utf-8`).trim().split(``);
+      this.filePos = 0;
+      this.charRange = `file`;
+    }
   }
 
   generateChars(len, charRange) {
     // by default charRange == ascii
-    let startCharCode = 0x21;
-    let endCharCode = 0x7E;
-    let emojiChar = String.fromCharCode(0xd83d);
-
-    if (charRange === `braille`) {
-      startCharCode = 0x2840;
-      endCharCode = 0x28ff;
-    } else if (charRange === `emoji`) {
-      startCharCode = 0xde01;
-      endCharCode = 0xde4a;
-    } else if (charRange === `kanji`) {
-      startCharCode = 0x30a0;
-      endCharCode = 0x30ff;
-    }
-
-    // emojis are two character widths, so use a prefix
-    let preChar = charRange === `emoji` ? emojiChar : ``;
     let chars = new Array(len);
-    for (let i = 0; i < len; ++i) {
-      chars[i] = preChar + String.fromCharCode(rand(startCharCode, endCharCode));
+
+    if (charRange === `ascii`) {
+      for (let i = 0; i < len; i++) {
+        chars[i] = String.fromCharCode(rand(0x21, 0x7E));
+      }
+    } else if (charRange === `braille`) {
+      for (let i = 0; i < len; i++) {
+        chars[i] = String.fromCharCode(rand(0x2840, 0x28ff));
+      }
+    } else if (charRange === `kanji`) {
+      for (let i = 0; i < len; i++) {
+        chars[i] = String.fromCharCode(rand(0x30a0, 0x30ff));
+      }
+    } else if (charRange === `emoji`) {
+      // emojis are two character widths, so use a prefix
+      const emojiPrefix = String.fromCharCode(0xd83d);
+      for (let i = 0; i < len; i++) {
+        chars[i] = emojiPrefix + String.fromCharCode(rand(0xde01, 0xde4a));
+      }
+    } else if (charRange === `file`) {
+      for (let i = 0; i < len; i++, this.filePos++) {
+        this.filePos = this.filePos < this.fileChars.length ? this.filePos : 0;
+        chars[i] = this.fileChars[this.filePos];
+      }
     }
 
     return chars;
@@ -105,18 +122,15 @@ class MatrixRain {
       curRow: rand(0, this.numRows),
       height: rand(this.numRows / 2, this.numRows),
       speed: rand(1, this.maxSpeed),
-      chars: this.generateChars(this.numRows, this.opts.charRange),
+      chars: this.generateChars(this.numRows, this.charRange),
     };
   }
 
   resizeDroplets() {
-    // stdout returns rows off by one, not sure why
-    const [numCols, numRows] = process.stdout.getWindowSize();
-    this.numRows = numRows + 1 ;
-    this.numCols = numCols;
+    [this.numCols, this.numRows] = process.stdout.getWindowSize();
 
     // transpose for direction
-    if (this.opts.direction === `h`) {
+    if (this.transpose) {
       [this.numCols, this.numRows] = [this.numRows, this.numCols];
     }
 
@@ -133,18 +147,15 @@ class MatrixRain {
   }
 
   writeAt(row, col, str, color) {
-    if (this.opts.direction === `h`) {
-      [row, col] = [col, row];
-    }
     // Only output if in viewport
     if (row >=0 && row < this.numRows && col >=0 && col < this.numCols) {
-      write(`${ansi.cursorPos(row, col)}${color || ``}${str || ``}`);
+      const pos = this.transpose ? ansi.cursorPos(col, row) : ansi.cursorPos(row, col);
+      write(`${pos}${color || ``}${str || ``}`);
     }
   }
 
   renderFrame() {
-    const color = this.opts.color;
-    const ansiColor = ansi.colors[`fg${color.charAt(0).toUpperCase()}${color.substr(1)}`]();
+    const ansiColor = ansi.colors[`fg${this.color.charAt(0).toUpperCase()}${this.color.substr(1)}`]();
 
     for (const droplets of this.colDroplets) {
       for (const droplet of droplets) {
@@ -152,8 +163,8 @@ class MatrixRain {
         droplet.alive++;
 
         if (droplet.alive % droplet.speed === 0) {
-          this.writeAt(curRow, curCol, droplet.chars[curRow], ansi.colors.fgWhite());
           this.writeAt(curRow - 1, curCol, droplet.chars[curRow - 1], ansiColor);
+          this.writeAt(curRow, curCol, droplet.chars[curRow], ansi.colors.fgWhite());
           this.writeAt(curRow - height, curCol, ` `);
           droplet.curRow++;
         }

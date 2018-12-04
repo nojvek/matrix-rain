@@ -3,7 +3,6 @@
 const fs = require(`fs`);
 const ArgumentParser = require(`argparse`).ArgumentParser;
 const ansi = require(`./ansi`);
-const stdout = process.stdout;
 
 const argParser = new ArgumentParser({
   version: `2.0.0`,
@@ -54,7 +53,7 @@ function write(chars) {
 }
 
 function flush() {
-  stdout.write(outBuffer.join(``));
+  process.stdout.write(outBuffer.join(``));
   return outBuffer = [];
 }
 
@@ -111,9 +110,10 @@ class MatrixRain {
   }
 
   resizeDroplets() {
-    // stdout returns values off by one
-    this.numCols = stdout.columns;
-    this.numRows = stdout.rows + 1 ;
+    // stdout returns rows off by one, not sure why
+    const [numCols, numRows] = process.stdout.getWindowSize();
+    this.numRows = numRows + 1 ;
+    this.numCols = numCols;
 
     // transpose for direction
     if (this.opts.direction === `h`) {
@@ -175,24 +175,28 @@ class MatrixRain {
 const args = argParser.parseArgs();
 const matrixRain = new MatrixRain(args);
 
-stdout.on(`resize`, function() {
+function start() {
+  // clear terminal and use alt buffer
+  process.stdin.setRawMode(true);
+  write(ansi.useAltBuffer());
+  write(ansi.cursorInvisible());
+  write(ansi.colors.bgBlack());
+  write(ansi.clearScreen());
+  flush();
   matrixRain.resizeDroplets();
-});
+}
 
-process.on(`SIGINT`, function() {
+function stop() {
   write(ansi.cursorVisible());
   write(ansi.cursorHome());
   write(ansi.useNormalBuffer());
   flush();
   process.exit();
-});
+}
 
-// clear terminal and use alt buffer
-write(ansi.useAltBuffer());
-write(ansi.cursorInvisible());
-write(ansi.colors.bgBlack());
-write(ansi.clearScreen());
-flush();
-matrixRain.resizeDroplets();
-
+process.on(`SIGINT`, () => stop());
+process.stdin.on(`data`, () => stop());
+process.stdout.on(`resize`, () => matrixRain.resizeDroplets());
 setInterval(() => matrixRain.renderFrame(), 16); // 60FPS
+
+start();

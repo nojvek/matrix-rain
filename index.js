@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const fs = require(`fs`);
 const ArgumentParser = require(`argparse`).ArgumentParser;
 const stdout = process.stdout;
@@ -130,7 +132,7 @@ function makeDroplet(col) {
   return {
     col,
     alive: 0,
-    curRow: 0,
+    curRow: rand(0, numRows),
     height: rand(numRows / 2, numRows),
     speed: rand(1, maxSpeed),
     chars: generateChars(numRows, args.charRange),
@@ -186,7 +188,7 @@ function renderFrame() {
 
       if (curRow - height > numRows) {
         // reset droplet
-        Object.assign(droplet, makeDroplet(droplet.col));
+        Object.assign(droplet, makeDroplet(droplet.col), {curRow: 0});
       }
     }
   }

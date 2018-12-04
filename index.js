@@ -187,6 +187,11 @@ const args = argParser.parseArgs();
 const matrixRain = new MatrixRain(args);
 
 function start() {
+  if (!process.stdout.isTTY) {
+    console.error(`Error: Output is not a text terminal`);
+    process.exit(1);
+  }
+
   // clear terminal and use alt buffer
   process.stdin.setRawMode(true);
   write(ansi.useAltBuffer());

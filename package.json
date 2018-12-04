@@ -26,8 +26,7 @@
   },
   "homepage": "https://github.com/nojvek/matrix-rain",
   "dependencies": {
-    "argparse": "1.0.10",
-    "chalk": "2.4.1"
+    "argparse": "1.0.10"
   },
   "devDependencies": {
     "eslint": "^5.9.0"

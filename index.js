@@ -3,9 +3,10 @@
 const fs = require(`fs`);
 const ArgumentParser = require(`argparse`).ArgumentParser;
 const ansi = require(`./ansi`);
+const npmPackage = JSON.parse(fs.readFileSync(`${__dirname}/package.json`));
 
 const argParser = new ArgumentParser({
-  version: `2.0.0`,
+  version: npmPackage.version,
   description: `The famous Matrix rain effect of falling green characters as a cli command`,
 });
 
@@ -197,6 +198,7 @@ function start() {
   write(ansi.useAltBuffer());
   write(ansi.cursorInvisible());
   write(ansi.colors.bgBlack());
+  write(ansi.colors.fgBlack());
   write(ansi.clearScreen());
   flush();
   matrixRain.resizeDroplets();

@@ -16,7 +16,7 @@ const argParser = new ArgumentParser({
     opts: {
       choices: [`h`, `v`],
       defaultValue: `v`,
-      help: `Change direction of rain. h=horizontal, v=vertical`,
+      help: `Change direction of rain. h=horizontal, v=vertical.`,
     },
   },
   {
@@ -25,7 +25,7 @@ const argParser = new ArgumentParser({
       choices: [`green`, `red`, `blue`, `yellow`, `magenta`, `cyan`, `white`],
       defaultValue: `green`,
       dest: `color`,
-      help: `Rain color. NOTE: droplet start is always white`,
+      help: `Rain color. NOTE: droplet start is always white.`,
     },
   },
   {
@@ -34,14 +34,14 @@ const argParser = new ArgumentParser({
       choices: [`ascii`, `binary`, `braille`, `emoji`, `kanji`],
       defaultValue: `ascii`,
       dest: `charRange`,
-      help: `Use rain characters from char-range`,
+      help: `Use rain characters from char-range.`,
     },
   },
   {
     flags: [ `-f`, `--file-path` ],
     opts: {
       dest: `filePath`,
-      help: `Read characters from a file instead of random characters from char-range`,
+      help: `Read characters from a file instead of random characters from char-range.`,
     },
   },
 ].forEach(({flags, opts}) => argParser.addArgument(flags, opts));

@@ -13,7 +13,7 @@ npm install -g matrix-rain
 ```
 usage: matrix-rain [-h] [-v] [-d {h,v}]
                 [-c {green,red,blue,yellow,magenta,cyan,white}]
-                [-k {ascii,binary,braille,emoji,kanji}] [-f FILEPATH]
+                [-k {ascii,binary,braille,emoji,katakana}] [-f FILEPATH]
 
 
 The famous Matrix rain effect of falling green characters as a cli command
@@ -24,7 +24,7 @@ Optional arguments:
                         Change direction of rain. h=horizontal, v=vertical
   -c , --color {green,red,blue,yellow,magenta,cyan,white}
                         Rain color. NOTE: droplet start is always white
-  -k, --char-range {ascii,binary,braille,emoji,kanji}
+  -k, --char-range {ascii,binary,braille,emoji,katakana}
                         Use rain characters from char-range
   -f, --file-path FILEPATH
                         Read characters from a file instead of random

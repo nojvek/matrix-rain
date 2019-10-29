@@ -31,7 +31,7 @@ const argParser = new ArgumentParser({
   {
     flags: [ `-k`, `--char-range` ],
     opts: {
-      choices: [`ascii`, `binary`, `braille`, `emoji`, `kanji`],
+      choices: [`ascii`, `binary`, `braille`, `emoji`, `katakana`],
       defaultValue: `ascii`,
       dest: `charRange`,
       help: `Use rain characters from char-range.`,
@@ -96,7 +96,7 @@ class MatrixRain {
       for (let i = 0; i < len; i++) {
         chars[i] = String.fromCharCode(rand(0x2840, 0x28ff));
       }
-    } else if (charRange === `kanji`) {
+    } else if (charRange === `katakana`) {
       for (let i = 0; i < len; i++) {
         chars[i] = String.fromCharCode(rand(0x30a0, 0x30ff));
       }

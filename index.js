@@ -31,7 +31,7 @@ const argParser = new ArgumentParser({
   {
     flags: [ `-k`, `--char-range` ],
     opts: {
-      choices: [`ascii`, `binary`, `braille`, `emoji`, `katakana`],
+      choices: [`ascii`, `binary`, `braille`, `emoji`, `katakana`, 'lil-guys'],
       defaultValue: `ascii`,
       dest: `charRange`,
       help: `Use rain characters from char-range.`,
@@ -105,6 +105,16 @@ class MatrixRain {
       const emojiPrefix = String.fromCharCode(0xd83d);
       for (let i = 0; i < len; i++) {
         chars[i] = emojiPrefix + String.fromCharCode(rand(0xde01, 0xde4a));
+      }
+    } else if (charRange === `lil-guys`) {
+      // Force horizontal direction
+      if (!this.transpose) {
+        this.transpose = true;
+        start();
+      }
+
+      for (let i = 0; i < len; i++) {
+        chars[i] = ' ~~o ';
       }
     } else if (charRange === `file`) {
       for (let i = 0; i < len; i++, this.filePos++) {

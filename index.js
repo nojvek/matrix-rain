@@ -110,11 +110,12 @@ class MatrixRain {
       // Force horizontal direction
       if (!this.transpose) {
         this.transpose = true;
+        this.color = 'white'
         start();
       }
 
       for (let i = 0; i < len; i++) {
-        chars[i] = ' ~~o ';
+        chars[i] = '  ~~o ';
       }
     } else if (charRange === `file`) {
       for (let i = 0; i < len; i++, this.filePos++) {

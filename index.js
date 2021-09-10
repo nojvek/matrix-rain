@@ -92,6 +92,10 @@ class MatrixRain {
       for (let i = 0; i < len; i++) {
         chars[i] = String.fromCharCode(rand(0x21, 0x7E));
       }
+    } else if (charRange === `binary`) {
+      for (let i = 0; i < len; i++) {
+        chars[i] = String.fromCharCode(rand(0x30, 0x32));
+      }
     } else if (charRange === `braille`) {
       for (let i = 0; i < len; i++) {
         chars[i] = String.fromCharCode(rand(0x2840, 0x28ff));

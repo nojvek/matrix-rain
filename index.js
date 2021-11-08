@@ -4,18 +4,26 @@ const fs = require(`fs`);
 const ArgumentParser = require(`argparse`).ArgumentParser;
 const ansi = require(`./ansi`);
 const npmPackage = JSON.parse(fs.readFileSync(`${__dirname}/package.json`));
+const art = require(`ascii-art`);
+const strip = require(`strip-ansi`);
 
 const argParser = new ArgumentParser({
-  version: npmPackage.version,
   description: `The famous Matrix rain effect of falling green characters as a cli command`,
 });
 
 [
   {
+    flags: [ `-v`, `--version` ],
+    opts: {
+      action: `version`,
+      version: npmPackage.version
+    },
+  },
+  {
     flags: [ `-d`, `--direction` ],
     opts: {
       choices: [`h`, `v`],
-      defaultValue: `v`,
+      default: `v`,
       help: `Change direction of rain. h=horizontal, v=vertical.`,
     },
   },
@@ -23,7 +31,7 @@ const argParser = new ArgumentParser({
     flags: [ `-c`, `--color` ],
     opts: {
       choices: [`green`, `red`, `blue`, `yellow`, `magenta`, `cyan`, `white`],
-      defaultValue: `green`,
+      default: `green`,
       dest: `color`,
       help: `Rain color. NOTE: droplet start is always white.`,
     },
@@ -32,7 +40,7 @@ const argParser = new ArgumentParser({
     flags: [ `-k`, `--char-range` ],
     opts: {
       choices: [`ascii`, `binary`, `braille`, `emoji`, `katakana`, 'lil-guys'],
-      defaultValue: `ascii`,
+      default: `ascii`,
       dest: `charRange`,
       help: `Use rain characters from char-range.`,
     },
@@ -44,7 +52,57 @@ const argParser = new ArgumentParser({
       help: `Read characters from a file instead of random characters from char-range.`,
     },
   },
-].forEach(({flags, opts}) => argParser.addArgument(flags, opts));
+  {
+    flags: [ `-m`, `--mask-path` ],
+    opts: {
+      dest: `maskPath`,
+      help: `Use the specified image to build a mask for the raindrops.`,
+    },
+  },
+  {
+    flags: [ `-i`, `--invert-mask` ],
+    opts: {
+      action: `store_true`,
+      dest: `invertMask`,
+      help: `Invert the mask specified with --mask-path.`,
+    },
+  },
+  {
+    flags: [ `--offset-row` ],
+    opts: {
+      type: `int`,
+      default: 0,
+      dest: `offsetRow`,
+      help: `Move the upper left corner of the mask down n rows.`,
+    },
+  },
+  {
+    flags: [ `--offset-col` ],
+    opts: {
+      type: `int`,
+      default: 0,
+      dest: `offsetCol`,
+      help: `Move the upper left corner of the mask right n columns.`,
+    },
+  },
+  {
+    flags: [ `--font-ratio` ],
+    opts: {
+      type: `int`,
+      default: 2,
+      dest: `fontRatio`,
+      help: `ratio between character height over width in the terminal.`,
+    },
+  },
+  {
+    flags: [ `--print-mask` ],
+    opts: {
+      action: `store_true`,
+      dest: `printMask`,
+      help: `Print mask and exit.`,
+    },
+  },
+].forEach(({flags, opts}) => argParser.add_argument(...flags, opts));
 
 
 // Simple string stream buffer + stdout flush at once
@@ -81,6 +139,41 @@ class MatrixRain {
       this.fileChars = fs.readFileSync(opts.filePath, `utf-8`).trim().split(``);
       this.filePos = 0;
       this.charRange = `file`;
+    }
+
+    // handle ascii art mask
+    if (opts.maskPath) {
+      this.maskConf = {
+        filepath: opts.maskPath,
+        alphabet: `bits`,
+        width: this.numCols,
+        height: this.numRows * opts.fontRatio,
+      };
+      this.maskInverted = opts.invertMask;
+      this.mask = undefined;
+      this.fontRatio = opts.fontRatio;
+      this.maskWidth = 0;
+      this.maskHeight = 0;
+      this.maskOffsetRow = opts.offsetRow;
+      this.maskOffsetCol = opts.offsetCol;
+      this.maskBlankChar = ` `;
+    }
+
+    if (opts.printMask) {
+      if (!opts.maskPath) {
+        console.log("no mask file provided.");
+        stop()
+      }
+
+      this.computeMask().then((mask) => {
+        for (let r in [0..this.maskOffsetRow]) {
+          console.log("");
+        }
+        mask.forEach((row, i) => {
+          console.log(" ".repeat(this.maskOffsetCol), row);
+        });
+        stop();
+      });
     }
   }
 
@@ -145,6 +238,12 @@ class MatrixRain {
   resizeDroplets() {
     [this.numCols, this.numRows] = process.stdout.getWindowSize();
 
+    if (this.maskConf) {
+      this.maskConf.width = this.numCols;
+      this.maskConf.height = this.numRows * this.fontRatio;
+      this.computeMask().then(mask => this.mask = mask);
+    }
+
     // transpose for direction
     if (this.transpose) {
       [this.numCols, this.numRows] = [this.numRows, this.numCols];
@@ -165,7 +264,17 @@ class MatrixRain {
   writeAt(row, col, str, color) {
     // Only output if in viewport
     if (row >=0 && row < this.numRows && col >=0 && col < this.numCols) {
-      const pos = this.transpose ? ansi.cursorPos(col, row) : ansi.cursorPos(row, col);
+      if (this.transpose) {
+        [col, row] = [row, col];
+      }
+      const pos = ansi.cursorPos(row, col);
+      if (this.mask) {
+        const maskRow = row - this.maskOffsetRow;
+        const maskCol = col - this.maskOffsetCol;
+        if(maskRow >= 0 && maskCol >= 0 && maskRow < this.maskHeight && maskCol < this.maskWidth && this.mask[maskRow] && this.mask[maskRow][maskCol] === this.maskBlankChar) {
+          str = ` `;
+        }
+      }
       write(`${pos}${color || ``}${str || ``}`);
     }
   }
@@ -194,12 +303,34 @@ class MatrixRain {
 
     flush();
   }
+
+  computeMask() {
+    return new Promise((resolve, reject) => {
+        (new art.Image(Object.assign({}, this.maskConf))).write((err, render) => {
+            if (err) {
+              console.error(err);
+              stop();
+              reject(err);
+            }
+            let mask = strip(render).split(`\n`);
+            mask = mask.slice(0, mask.length - 1);
+            this.maskWidth = mask[0].length;
+            this.maskHeight = mask.length;
+            this.maskBlankChar = this.maskInverted
+              ? `#`
+              : ` `;
+            resolve(mask);
+          }
+        );
+      }
+    );
+  }
 }
 
 
 //// main ////
 
-const args = argParser.parseArgs();
+const args = argParser.parse_args();
 const matrixRain = new MatrixRain(args);
 
 function start() {
@@ -233,4 +364,7 @@ process.stdin.on(`data`, () => stop());
 process.stdout.on(`resize`, () => matrixRain.resizeDroplets());
 setInterval(() => matrixRain.renderFrame(), 16); // 60FPS
 
-start();
+if (!args.printMask) {
+  start();
+}
+

@@ -24,7 +24,7 @@ Optional arguments:
                         Change direction of rain. h=horizontal, v=vertical
   -c , --color {green,red,blue,yellow,magenta,cyan,white}
                         Rain color. NOTE: droplet start is always white
-  -k, --char-range {ascii,binary,braille,emoji,katakana}
+  -k, --char-range {ascii,binary,braille,emoji,katakana,picto}
                         Use rain characters from char-range
   -f, --file-path FILEPATH
                         Read characters from a file instead of random

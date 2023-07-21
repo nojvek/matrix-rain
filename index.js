@@ -39,7 +39,7 @@ const argParser = new ArgumentParser({
   {
     flags: [ `-k`, `--char-range` ],
     opts: {
-      choices: [`ascii`, `binary`, `braille`, `emoji`, `katakana`, 'lil-guys'],
+      choices: [`ascii`, `binary`, `braille`, `emoji`, `katakana`, `lil-guys`, `picto`],
       default: `ascii`,
       dest: `charRange`,
       help: `Use rain characters from char-range.`,
@@ -196,6 +196,10 @@ class MatrixRain {
     } else if (charRange === `katakana`) {
       for (let i = 0; i < len; i++) {
         chars[i] = String.fromCharCode(rand(0x30a0, 0x30ff));
+      }
+    } else if (charRange === `picto`) {
+      for (let i = 0; i < len; i++) {
+        chars[i] = String.fromCharCode(rand(0x4e00, 0x9fa5));
       }
     } else if (charRange === `emoji`) {
       // emojis are two character widths, so use a prefix

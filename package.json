@@ -1,6 +1,6 @@
 {
   "name": "matrix-rain",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "The famous Matrix rain effect of falling green characters as a cli command",
   "main": "index.js",
   "preferGlobal": true,
